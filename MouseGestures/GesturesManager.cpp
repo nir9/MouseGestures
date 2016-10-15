@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include "Keyboard.h"
 
-//#define GESTURE_DISTANCE 400
-#define GESTURE_DISTANCE 350
+// perhaps work with ratio and take into consideration the screen size (height and width)
+
+#define GESTURE_DISTANCE 500
 
 /* Last mouse point */
 POINT pLast;
@@ -12,10 +13,18 @@ long initial_x = 0;
 /* Direction of gesture (0 is not started) */
 int dir = 0;
 
+int save = 0;
+
+
 /* Get direction given two points, if not part of gesture return 0 */
 int GetDirection(POINT* p1, POINT* p2)
 {
-	if (abs(p1->y - p2->y) < 3) {
+	/* Distances */
+	int dY = abs(p1->y - p2->y);
+	int dX = abs(p1->x - p2->x);
+
+	// Moving window gestures
+	if (dY < 1) {
 		if (p2->x < p1->x) {
 			return RIGHT;
 		}
@@ -23,13 +32,37 @@ int GetDirection(POINT* p1, POINT* p2)
 			return LEFT;
 		}
 	}
-	else if (abs(p1->y - p2->y) < 17 && p2->x < p1->x) {
-		return MINIMIZE;
+
+	// Minimize Gesture
+	else if (p2->x < p1->x) {
+		int deltaY = (p2->y - p1->y);
+		int deltaX = (p2->x - p1->x);
+		
+		int slope = deltaY / deltaX;
+
+		printf("slope %d\n", slope);
+		if (slope == -1 || slope == -2) {
+			printf("YESSS!!!\n");
+			save = 0;
+			return MINIMIZE;
+		}
+		else if (slope == 0)
+		{
+			if (save == 5) {
+				save = 0;
+				return 0;
+			}
+			else {
+				save++;
+				return MINIMIZE;
+			}
+		}
 	}
 
 	return 0;
 }
 
+/* Registers a mouse point */
 void RegisterPoint(POINT* p)
 {
 	if (dir == 0) {
@@ -50,6 +83,7 @@ void RegisterPoint(POINT* p)
 	pLast = *p;
 }
 
+/* Returns true when gesture has been made */
 BOOL IsGesture()
 {
 	if (abs(pLast.x - initial_x) >= GESTURE_DISTANCE) {
@@ -63,3 +97,9 @@ int GetGestureDirection()
 {
 	return dir;
 }
+
+
+/*
+To add ratio gestures:
+GetMonitorInfo, MonitorFromWindow, GetForegroundWindow
+*/

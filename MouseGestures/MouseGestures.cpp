@@ -4,6 +4,7 @@
 #include "Keyboard.h"
 #include "GesturesManager.h"
 
+#define SHOW_WINDOW TRUE
 
 BOOL closed = FALSE;
 
@@ -43,7 +44,9 @@ LRESULT CALLBACK HookProc(int nCode, WPARAM wParam, LPARAM lParam)
 HHOOK mouse_hook;
 void main()
 {
-	puts("MouseGestures!");
+	if(!SHOW_WINDOW) {
+		ShowWindow(GetConsoleWindow(), SW_HIDE);
+	}
 
 	mouse_hook = SetWindowsHookEx(WH_MOUSE_LL, HookProc, GetModuleHandle(0), 0);
 	if (mouse_hook == 0) {
@@ -55,5 +58,4 @@ void main()
 		GetMessage(&msg, nullptr, 0, 0);
 		DispatchMessage(&msg);
 	}
-	getchar();
 }
